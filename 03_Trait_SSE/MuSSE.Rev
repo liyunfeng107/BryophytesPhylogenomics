@@ -1,0 +1,79 @@
+setwd("")
+CHARACTER = ""
+
+NUM_TOTAL_SPECIES     = ##
+NUM_SPECIES           = ##
+NUM_STATES            = 3
+H                     = 0.587405
+
+observed_phylogeny <- readTrees("")[1]
+data <- readCharacterData(""+CHARACTER+".nex")
+taxa <- observed_phylogeny.taxa()
+root_age <- observed_phylogeny.rootAge()
+
+mvi = 0
+mni = 0
+
+rate_mean <- ln( ln(NUM_SPECIES/2.0) / root_age )
+rate_sd ~ dnExponential( 1.0 / H )
+moves[++mvi] = mvScale( rate_sd, lambda=1.0, tune=true, weight=2.0 )
+
+for (i in 1:NUM_STATES) {
+
+    log_speciation[i] ~ dnNormal(mean=rate_mean, sd=rate_sd)
+    speciation[i] := exp(log_speciation[i])
+    moves[++mvi] = mvSlide(log_speciation[i],delta=2.0,tune=true,weight=3.0)
+
+    log_extinction[i] ~ dnNormal(mean=rate_mean, sd=rate_sd)
+    extinction[i] := exp(log_extinction[i])
+    moves[++mvi] = mvSlide(log_extinction[i],delta=2.0,tune=true,weight=3.0)
+
+}
+
+rate_pr := observed_phylogeny.treeLength() / 200
+mu ~ dnExp(rate_pr)
+moves[++mvi] = mvScale(mu, lambda=1, weight=2.0)
+NUM_RATES = NUM_STATES * (NUM_STATES-1)
+for ( i in 1:NUM_RATES ) {
+    transition_rates[i] := mu
+}
+
+
+rate_matrix := fnFreeK(transition_rates, rescaled=false)
+
+root_prior ~ dnDirichlet( rep(1,NUM_RATES) )
+moves[++mvi] = mvDirichletSimplex(root_prior,tune=true,weight=2)
+moves[++mvi] = mvBetaSimplex(root_prior,tune=true,weight=2)
+
+rho <- observed_phylogeny.ntips()/NUM_TOTAL_SPECIES
+
+timetree ~ dnCDBDP( rootAge = root_age,
+speciationRates   = speciation,
+extinctionRates   = extinction,
+Q                 = rate_matrix,
+pi                = root_prior,
+delta             = 1.0,
+rho               = rho)
+
+timetree.clamp( observed_phylogeny )
+timetree.clampCharData( data )
+mymodel = model(rate_matrix)
+
+monitors[++mni] = mnModel(filename=""+CHARACTER+"/MuSSE.log", printgen=1)
+monitors[++mni] = mnJointConditionalAncestralState(tree=timetree, cdbdp=timetree, type="Standard", printgen=1, withTips=true, withStartStates=false, filename=""+CHARACTER+"/MuSSE_anc_states.log")
+monitors[++mni] = mnStochasticCharacterMap(cdbdp=timetree, printgen=1, filename=""+CHARACTER+"/MuSSE_stoch_map.log", include_simmap=true)
+monitors[++mni] = mnScreen(printgen=1, speciation, extinction)
+
+### PP AND STEPPING STONE ###
+pow_p = powerPosterior(mymodel, moves, monitors, ""+CHARACTER+"/"+"MuSSE_stones/MuSSE.out", cats=10) 
+pow_p.burnin(generations=5000,tuningInterval=500)
+pow_p.run(generations=1000)
+ss = steppingStoneSampler(file=""+CHARACTER+"/"+"MuSSE_stones/MuSSE.out", powerColumnName="power", likelihoodColumnName="likelihood")
+ss.marginal()
+
+marginal_likelihood = ss.marginal()
+# 输出到txt文件
+output_file = ""+CHARACTER+"_MuSSE_ss_marginal.txt"
+write(file=output_file, CHARACTER + "_MuSSE," + marginal_likelihood)
+
+q()

@@ -1,0 +1,114 @@
+setwd("")
+CHARACTER = ""
+
+setOption("useScaling", "true")
+
+NUM_TOTAL_SPECIES     = ##
+NUM_SPECIES           = ##
+NUM_STATES            = 2
+NUM_HIDDEN            = 2
+NUM_RATES             = NUM_STATES * NUM_HIDDEN
+H                     = 0.587405
+
+observed_phylogeny <- readTrees("")[1]
+data <- readCharacterData(""+CHARACTER+".nex")
+data_exp <- data.expandCharacters( NUM_HIDDEN )
+taxa <- observed_phylogeny.taxa()
+root_age <- observed_phylogeny.rootAge()
+
+mvi = 0
+mni = 0
+
+rate_mean <- ln( ln(NUM_SPECIES/2.0) / root_age )
+rate_sd ~ dnExponential( 1.0 / H )
+moves[++mvi] = mvScale( rate_sd, lambda=1.0, tune=true, weight=2.0 )
+
+for (i in 1:NUM_STATES) {
+
+speciation_alpha[i] ~ dnNormal(mean=rate_mean,sd=rate_sd)
+moves[++mvi] = mvSlide(speciation_alpha[i],delta=1.0,tune=true,weight=2.0)
+
+extinction_alpha[i] ~ dnNormal(mean=rate_mean,sd=rate_sd)
+moves[++mvi] = mvSlide(extinction_alpha[i],delta=1.0,tune=true,weight=2.0)
+
+}
+
+for (i in 1:NUM_HIDDEN) {
+
+speciation_beta[i] ~ dnExp(1.0)
+moves[++mvi] = mvSlide(speciation_beta[i],delta=1.0,tune=true,weight=2.0)
+
+
+extinction_beta[i] ~ dnNormal(0.0,1.0)
+moves[++mvi] = mvSlide(extinction_beta[i],delta=1.0,tune=true,weight=2.0)
+
+
+}
+
+for (j in 1:NUM_HIDDEN) {
+for (i in 1:NUM_STATES) {
+if ( j == 1) {
+speciation[i] := exp( speciation_alpha[i] )
+extinction[i] := exp( extinction_alpha[i] )
+} else {
+index = i+(j*NUM_STATES)-NUM_STATES
+speciation[index] := speciation[index-NUM_STATES] * exp( speciation_beta[j-1] )
+extinction[index] := exp( extinction_alpha[i] + extinction_beta[j-1] )
+}
+}
+}
+
+rate_pr := observed_phylogeny.treeLength() / 200
+mu ~ dnExp(rate_pr)
+moves[++mvi] = mvScale(mu, lambda=1, weight=2.0)
+
+for ( i in 1:NUM_RATES ) {
+    transition_rates[i] := mu
+}
+
+hidden_rate ~ dnExponential(rate_pr)
+moves.append( mvScale(hidden_rate,lambda=1,tune=true,weight=5) )
+
+for (i in 1:(NUM_HIDDEN * (NUM_HIDDEN - 1))) {
+    R[i] := hidden_rate
+}
+
+rate_matrix := fnHiddenStateRateMatrix(transition_rates, R, rescaled=false)
+
+root_prior ~ dnDirichlet( rep(1,NUM_RATES) )
+moves[++mvi] = mvDirichletSimplex(root_prior,tune=true,weight=2)
+moves[++mvi] = mvBetaSimplex(root_prior,tune=true,weight=2)
+
+rho <- observed_phylogeny.ntips()/NUM_TOTAL_SPECIES
+
+timetree ~ dnCDBDP( rootAge = root_age,
+speciationRates   = speciation,
+extinctionRates   = extinction,
+Q                 = rate_matrix,
+pi                = root_prior,
+delta             = 1.0,
+rho               = rho)
+
+timetree.clamp( observed_phylogeny )
+timetree.clampCharData( data_exp )
+mymodel = model(rate_matrix)
+
+monitors[++mni] = mnModel(filename=""+CHARACTER+"/HiSSE_2.log", printgen=1)
+monitors[++mni] = mnJointConditionalAncestralState(tree=timetree, cdbdp=timetree, type="NaturalNumbers", printgen=1, withTips=true, withStartStates=false, filename=""+CHARACTER+"/HiSSE_2_anc_states.log")
+monitors[++mni] = mnStochasticCharacterMap(cdbdp=timetree, printgen=1, filename=""+CHARACTER+"/HiSSE_2_stoch_map.log", include_simmap=true)
+monitors[++mni] = mnScreen(printgen=1, speciation, extinction)
+
+
+### PP AND STEPPING STONE ###
+pow_p = powerPosterior(mymodel, moves, monitors, ""+CHARACTER+"/"+"HiSSE_2_stones/HiSSE_2.out", cats=50) 
+pow_p.burnin(generations=5000,tuningInterval=500)
+pow_p.run(generations=1000)
+ss = steppingStoneSampler(file=""+CHARACTER+"/"+"HiSSE_2_stones/HiSSE_2.out", powerColumnName="power", likelihoodColumnName="likelihood")
+ss.marginal()
+
+marginal_likelihood = ss.marginal()
+# 输出到txt文件
+output_file = ""+CHARACTER+"_HiSSE_2_ss_marginal.txt"
+write(file=output_file, CHARACTER + "_HiSSE_2," + marginal_likelihood)
+
+q()
