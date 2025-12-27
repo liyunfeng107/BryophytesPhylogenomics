@@ -93,7 +93,7 @@ monitors[++mni] = mnStochasticCharacterMap(cdbdp=timetree, printgen=200, filenam
 monitors[++mni] = mnScreen(printgen=1, speciation, extinction)
 
 ### PP AND STEPPING STONE ###
-pow_p = powerPosterior(mymodel, moves, monitors, ""+CHARACTER+"/"+"CID2/CID2_pp.out", cats=10) 
+pow_p = powerPosterior(mymodel, moves, monitors, ""+CHARACTER+"/"+"CID2/CID2_pp.out", cats=50) 
 pow_p.burnin(generations=5000,tuningInterval=500)
 pow_p.run(generations=1000)
 ss = steppingStoneSampler(file=""+CHARACTER+"/"+"CID2/CID2_pp.out", powerColumnName="power", likelihoodColumnName="likelihood")
