@@ -1,0 +1,267 @@
+### ARD model witjh 4 hidden states ###
+setwd("")
+CHARACTER = ""
+
+morpho <- readDiscreteCharacterData(""+CHARACTER+".nex")
+morpho_exp = morpho.expandCharacters( 4 ) # Expand for 4 possible states for each character #
+morpho_exp.show()
+moves = VectorMoves()
+monitors = VectorMonitors()
+phylogeny <- readTrees("")[1]
+rate_pr := phylogeny.treeLength() / 200
+
+NUM_STATES = 3
+NUM_HIDDEN_STATES = 4
+
+for (i in 1:12) {
+  for (j in 1:12) {
+    rates[i][j] <- 0.0
+  }
+}
+
+H <- 0.587405
+SD_PRIOR <- 1/H
+
+rate_01_median ~ dnExponential( rate_pr )
+rate_01_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_01_median, weight=2 ) )
+moves.append( mvScale( rate_01_sd, weight=2 ) )
+rate_01 := fnDiscretizeDistribution( dnLognormal( ln(rate_01_median), rate_01_sd ), NUM_HIDDEN_STATES )
+rate_10_median ~ dnExponential( rate_pr )
+rate_10_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_10_median, weight=2 ) )
+moves.append( mvScale( rate_10_sd, weight=2 ) )
+rate_10 := fnDiscretizeDistribution( dnLognormal( ln(rate_10_median), rate_10_sd ), NUM_HIDDEN_STATES )
+
+rate_20_median ~ dnExponential( rate_pr )
+rate_20_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_20_median, weight=2 ) )
+moves.append( mvScale( rate_20_sd, weight=2 ) )
+rate_20 := fnDiscretizeDistribution( dnLognormal( ln(rate_20_median), rate_20_sd ), NUM_HIDDEN_STATES )
+rate_02_median ~ dnExponential( rate_pr )
+rate_02_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_02_median, weight=2 ) )
+moves.append( mvScale( rate_02_sd, weight=2 ) )
+rate_02 := fnDiscretizeDistribution( dnLognormal( ln(rate_02_median), rate_02_sd ), NUM_HIDDEN_STATES )
+
+rate_12_median ~ dnExponential( rate_pr )
+rate_12_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_12_median, weight=2 ) )
+moves.append( mvScale( rate_12_sd, weight=2 ) )
+rate_12 := fnDiscretizeDistribution( dnLognormal( ln(rate_12_median), rate_12_sd ), NUM_HIDDEN_STATES )
+rate_21_median ~ dnExponential( rate_pr )
+rate_21_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_21_median, weight=2 ) )
+moves.append( mvScale( rate_21_sd, weight=2 ) )
+rate_21 := fnDiscretizeDistribution( dnLognormal( ln(rate_21_median), rate_21_sd ), NUM_HIDDEN_STATES )
+
+rate_34_median ~ dnExponential( rate_pr )
+rate_34_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_34_median, weight=2 ) )
+moves.append( mvScale( rate_34_sd, weight=2 ) )
+rate_34 := fnDiscretizeDistribution( dnLognormal( ln(rate_34_median), rate_34_sd ), NUM_HIDDEN_STATES )
+rate_43_median ~ dnExponential( rate_pr )
+rate_43_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_43_median, weight=2 ) )
+moves.append( mvScale( rate_43_sd, weight=2 ) )
+rate_43 := fnDiscretizeDistribution( dnLognormal( ln(rate_43_median), rate_43_sd ), NUM_HIDDEN_STATES )
+
+rate_53_median ~ dnExponential( rate_pr )
+rate_53_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_53_median, weight=2 ) )
+moves.append( mvScale( rate_53_sd, weight=2 ) )
+rate_53 := fnDiscretizeDistribution( dnLognormal( ln(rate_53_median), rate_53_sd ), NUM_HIDDEN_STATES )
+rate_35_median ~ dnExponential( rate_pr )
+rate_35_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_35_median, weight=2 ) )
+moves.append( mvScale( rate_35_sd, weight=2 ) )
+rate_35 := fnDiscretizeDistribution( dnLognormal( ln(rate_35_median), rate_35_sd ), NUM_HIDDEN_STATES )
+
+rate_45_median ~ dnExponential( rate_pr )
+rate_45_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_45_median, weight=2 ) )
+moves.append( mvScale( rate_45_sd, weight=2 ) )
+rate_45 := fnDiscretizeDistribution( dnLognormal( ln(rate_45_median), rate_45_sd ), NUM_HIDDEN_STATES )
+rate_54_median ~ dnExponential( rate_pr )
+rate_54_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_54_median, weight=2 ) )
+moves.append( mvScale( rate_54_sd, weight=2 ) )
+rate_54 := fnDiscretizeDistribution( dnLognormal( ln(rate_54_median), rate_54_sd ), NUM_HIDDEN_STATES )
+
+rate_67_median ~ dnExponential( rate_pr )
+rate_67_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_67_median, weight=2 ) )
+moves.append( mvScale( rate_67_sd, weight=2 ) )
+rate_67 := fnDiscretizeDistribution( dnLognormal( ln(rate_67_median), rate_67_sd ), NUM_HIDDEN_STATES )
+rate_76_median ~ dnExponential( rate_pr )
+rate_76_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_76_median, weight=2 ) )
+moves.append( mvScale( rate_76_sd, weight=2 ) )
+rate_76 := fnDiscretizeDistribution( dnLognormal( ln(rate_76_median), rate_76_sd ), NUM_HIDDEN_STATES )
+
+rate_86_median ~ dnExponential( rate_pr )
+rate_86_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_86_median, weight=2 ) )
+moves.append( mvScale( rate_86_sd, weight=2 ) )
+rate_86 := fnDiscretizeDistribution( dnLognormal( ln(rate_86_median), rate_86_sd ), NUM_HIDDEN_STATES )
+rate_68_median ~ dnExponential( rate_pr )
+rate_68_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_68_median, weight=2 ) )
+moves.append( mvScale( rate_68_sd, weight=2 ) )
+rate_68 := fnDiscretizeDistribution( dnLognormal( ln(rate_68_median), rate_68_sd ), NUM_HIDDEN_STATES )
+
+rate_78_median ~ dnExponential( rate_pr )
+rate_78_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_78_median, weight=2 ) )
+moves.append( mvScale( rate_78_sd, weight=2 ) )
+rate_78 := fnDiscretizeDistribution( dnLognormal( ln(rate_78_median), rate_78_sd ), NUM_HIDDEN_STATES )
+rate_87_median ~ dnExponential( rate_pr )
+rate_87_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_87_median, weight=2 ) )
+moves.append( mvScale( rate_87_sd, weight=2 ) )
+rate_87 := fnDiscretizeDistribution( dnLognormal( ln(rate_87_median), rate_87_sd ), NUM_HIDDEN_STATES )
+
+rate_910_median ~ dnExponential( rate_pr )
+rate_910_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_910_median, weight=2 ) )
+moves.append( mvScale( rate_910_sd, weight=2 ) )
+rate_910 := fnDiscretizeDistribution( dnLognormal( ln(rate_910_median), rate_910_sd ), NUM_HIDDEN_STATES )
+rate_109_median ~ dnExponential( rate_pr )
+rate_109_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_109_median, weight=2 ) )
+moves.append( mvScale( rate_109_sd, weight=2 ) )
+rate_109 := fnDiscretizeDistribution( dnLognormal( ln(rate_109_median), rate_109_sd ), NUM_HIDDEN_STATES )
+
+rate_119_median ~ dnExponential( rate_pr )
+rate_119_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_119_median, weight=2 ) )
+moves.append( mvScale( rate_119_sd, weight=2 ) )
+rate_119 := fnDiscretizeDistribution( dnLognormal( ln(rate_119_median), rate_119_sd ), NUM_HIDDEN_STATES )
+rate_911_median ~ dnExponential( rate_pr )
+rate_911_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_911_median, weight=2 ) )
+moves.append( mvScale( rate_911_sd, weight=2 ) )
+rate_911 := fnDiscretizeDistribution( dnLognormal( ln(rate_911_median), rate_911_sd ), NUM_HIDDEN_STATES )
+
+rate_1011_median ~ dnExponential( rate_pr )
+rate_1011_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_1011_median, weight=2 ) )
+moves.append( mvScale( rate_1011_sd, weight=2 ) )
+rate_1011 := fnDiscretizeDistribution( dnLognormal( ln(rate_1011_median), rate_1011_sd ), NUM_HIDDEN_STATES )
+rate_1110_median ~ dnExponential( rate_pr )
+rate_1110_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_1110_median, weight=2 ) )
+moves.append( mvScale( rate_1110_sd, weight=2 ) )
+rate_1110 := fnDiscretizeDistribution( dnLognormal( ln(rate_1110_median), rate_1110_sd ), NUM_HIDDEN_STATES )
+
+switch_VS_S ~ dnExponential( rate_pr )
+switch_VS_F ~ dnExponential( rate_pr )
+switch_VS_VF ~ dnExponential( rate_pr )
+switch_S_VS ~ dnExponential( rate_pr )
+switch_S_F ~ dnExponential( rate_pr )
+switch_S_VF ~ dnExponential( rate_pr )
+switch_F_VS ~ dnExponential( rate_pr )
+switch_F_S ~ dnExponential( rate_pr )
+switch_F_VF ~ dnExponential( rate_pr )
+switch_VF_VS ~ dnExponential( rate_pr )
+switch_VF_S ~ dnExponential( rate_pr )
+switch_VF_F ~ dnExponential( rate_pr )
+
+moves.append( mvScale( switch_VS_S, weight=2 ) )
+moves.append( mvScale( switch_VS_F, weight=2 ) )
+moves.append( mvScale( switch_VS_VF, weight=2 ) )
+moves.append( mvScale( switch_S_VS, weight=2 ) )
+moves.append( mvScale( switch_S_F, weight=2 ) )
+moves.append( mvScale( switch_S_VF, weight=2 ) )
+moves.append( mvScale( switch_F_VS, weight=2 ) )
+moves.append( mvScale( switch_F_S, weight=2 ) )
+moves.append( mvScale( switch_F_VF, weight=2 ) )
+moves.append( mvScale( switch_VF_VS, weight=2 ) )
+moves.append( mvScale( switch_VF_S, weight=2 ) )
+moves.append( mvScale( switch_VF_F, weight=2 ) )
+
+rates[1][2] := rate_01[1]
+rates[2][1] := rate_10[1]
+rates[1][3] := rate_02[1]
+rates[3][1] := rate_20[1]
+rates[2][3] := rate_12[1]
+rates[3][2] := rate_21[1]
+
+
+rates[4][5] := rate_34[2]
+rates[5][4] := rate_43[2]
+rates[4][6] := rate_35[2]
+rates[6][4] := rate_53[2]
+rates[5][6] := rate_45[2]
+rates[6][5] := rate_54[2]
+
+rates[7][8] := rate_67[3]
+rates[8][7] := rate_76[3]
+rates[7][9] := rate_68[3]
+rates[9][7] := rate_86[3]
+rates[8][9] := rate_78[3]
+rates[9][8] := rate_87[3]
+
+rates[10][11] := rate_910[4]
+rates[11][10] := rate_109[4]
+rates[10][12] := rate_911[4]
+rates[12][10] := rate_119[4]
+rates[11][12] := rate_1011[4]
+rates[12][11] := rate_1110[4]
+
+
+Q_morpho := fnFreeK(rates, rescaled=FALSE)
+
+### Draw root state frequencies from Dirichlet prior distribution ###
+rf_prior <- rep(1,NUM_STATES * NUM_HIDDEN_STATES)
+rf ~ dnDirichlet( rf_prior )
+moves.append( mvBetaSimplex( rf, weight=2 ) )
+moves.append( mvDirichletSimplex( rf, weight=2 ) )
+
+phyMorpho ~ dnPhyloCTMC(tree=phylogeny, Q=Q_morpho, rootFrequencies=rf, type="NaturalNumbers")
+phyMorpho.clamp(morpho_exp)
+mymodel = model(phylogeny)
+
+monitors.append( mnModel(filename=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD.log", printgen=1) )
+monitors.append( mnScreen(printgen=10) )
+monitors.append( mnJointConditionalAncestralState(tree=phylogeny,
+                                                 ctmc=phyMorpho,
+                                                 filename=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD.states.txt",
+                                                 type="NaturalNumbers",
+                                                 printgen=1,
+                                                 withTips=true,
+                                                 withStartStates=false) )
+monitors.append( mnStochasticCharacterMap(ctmc=phyMorpho,
+                                          filename=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD_stoch_char_map.log",
+                                          printgen=1,
+                                          include_simmap=true) )
+
+# Initialize the MCMC object #
+mymcmc = mcmc(mymodel, monitors, moves, nruns=2, combine="mixed")
+
+# Run the MCMC #
+mymcmc.run(generations=50000, tuningInterval=200)
+
+anc_states = readAncestralStateTrace(""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD.states.txt")
+anc_tree = ancestralStateTree(tree=phylogeny, 
+ancestral_state_trace_vector=anc_states, 
+include_start_states=false, 
+file=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD.tree", 
+burnin=0.25, 
+summary_statistic="MAP", 
+site=1,
+nStates=3*4)
+
+anc_states_stoch_map = readAncestralStateTrace(""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD_stoch_char_map.log")
+#summarizeCharacterMaps(anc_states_stoch_map, phylogeny, file=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD_stoch_summary.tsv", burnin=0.25)
+
+char_map_tree = characterMapTree(phylogeny,
+                 ancestral_state_trace_vector=anc_states_stoch_map,
+                 character_file=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD_stoch_map_character.tree",
+                 posterior_file=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD_stoch_map_posterior.tree",
+                 shift_prob_file=""+CHARACTER+"_HRM4_ARD_output_final/HRM4_ARD_stoch_map_marginal_shift.tree",
+                 burnin=0.25,
+                 reconstruction="marginal")
+
+q()
+

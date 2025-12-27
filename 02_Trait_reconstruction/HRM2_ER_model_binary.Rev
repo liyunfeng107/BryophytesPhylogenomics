@@ -1,0 +1,82 @@
+### ER model with 2 hidden states ###
+setwd("")
+CHARACTER = ""
+
+morpho <- readDiscreteCharacterData(""+CHARACTER+".nex")
+morpho_exp = morpho.expandCharacters( 2 )
+morpho_exp.show()
+moves = VectorMoves()
+monitors = VectorMonitors()
+phylogeny <- readTrees("")[1]
+
+for (i in 1:4) {
+  for (j in 1:4) {
+    rates[i][j] <- 0.0
+  }
+}
+
+NUM_HIDDEN_STATES = 2
+rate_pr := phylogeny.treeLength() / 200
+H <- 0.587405
+SD_PRIOR <- 1/H
+
+rate_switch_median ~ dnExponential( rate_pr )
+rate_switch_sd ~ dnExponential( SD_PRIOR )
+moves.append( mvScale( rate_switch_median, weight=2 ) )
+moves.append( mvScale( rate_switch_sd, weight=2 ) )
+rate_switch := fnDiscretizeDistribution( dnLognormal( ln(rate_switch_median), rate_switch_sd ), 2 )
+
+switch_slow_fast ~ dnExponential( rate_pr )
+switch_fast_slow ~ dnExponential( rate_pr )
+moves.append( mvScale( switch_slow_fast, weight=2 ) )
+moves.append( mvScale( switch_fast_slow, weight=2 ) )
+
+rates[1][2] := rate_switch[1]     # 0S->1S
+rates[1][3] := switch_slow_fast   # 0S->0F
+rates[2][1] := rate_switch[1]     # 1S->0S
+rates[2][4] := switch_slow_fast   # 1S->1F
+rates[3][1] := switch_fast_slow   # 0F->0S
+rates[3][4] := rate_switch[2]     # 0F->1F
+rates[4][2] := switch_fast_slow   # 1F->1S
+rates[4][3] := rate_switch[2]     # 1F->0F
+
+Q_morpho := fnFreeK(rates, rescaled=FALSE)
+
+### Draw root state frequencies from Dirichlet prior distribution ###
+rf_prior <- rep(1,2*2)
+rf ~ dnDirichlet( rf_prior )
+moves.append( mvBetaSimplex( rf, weight=2 ) )
+moves.append( mvDirichletSimplex( rf, weight=2 ) )
+
+phyMorpho ~ dnPhyloCTMC(tree=phylogeny, Q=Q_morpho, rootFrequencies=rf, type="NaturalNumbers")
+phyMorpho.clamp(morpho_exp)
+mymodel = model(phylogeny)
+
+monitors.append( mnModel(filename=""+CHARACTER+"_HRM2_ER_output/hrm2_er.log", printgen=1) )
+monitors.append( mnScreen(printgen=1) )
+monitors.append( mnJointConditionalAncestralState(tree=phylogeny,
+                                                  ctmc=phyMorpho,
+                                                  filename=""+CHARACTER+"_HRM2_ER_output/hrm2_er.states.txt",
+                                                  type="NaturalNumbers",
+                                                  printgen=1,
+                                                  withTips=true,
+                                                  withStartStates=false) )
+monitors.append( mnStochasticCharacterMap(ctmc=phyMorpho,
+                                          filename=""+CHARACTER+"_HRM2_ER_output/hrm2_er_stoch_char_map.log",
+                                          printgen=1,
+                                          include_simmap=true) )
+
+### Estimate marginal likelihoods ###
+pow_p = powerPosterior(mymodel, moves, monitors, ""+CHARACTER+"_HRM2_ER_output/HRM2_ER.out", cats=50) 
+pow_p.burnin(generations=10000,tuningInterval=1000)
+pow_p.run(generations=1000)  
+
+### Stepping stone sampler ###
+ss = steppingStoneSampler(file=""+CHARACTER+"_HRM2_ER_output/HRM2_ER.out", powerColumnName="power", likelihoodColumnName="likelihood")
+ss.marginal() 
+marginal_likelihood = ss.marginal()
+# 输出到txt文件
+output_file = ""+CHARACTER+"_HRM2_ER_ss_marginal.txt"
+write(file=output_file, CHARACTER+"_HRM2_ER,"+marginal_likelihood)
+
+q()
